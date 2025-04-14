@@ -1,5 +1,7 @@
 import time
 import docker
+import os
+import requests
 from typing import List
 
 def are_containers_running(names: List[str]) -> bool:
@@ -31,12 +33,14 @@ def start_containers(names: List[str]):
         except docker.errors.NotFound:
             print(f"Container {name} not found.")
 
-def wait_for_trigger(env_var_name, check_interval=0.1):
-    """
-    Waits for an environment variable to be set to proceed.
-
-    :param env_var_name: Name of the environment variable to check.
-    :param check_interval: Time in seconds to wait between checks.
-    """
-    while not os.getenv(env_var_name):
+def wait_for_trigger(url, check_interval=0.1):
+    while True:
+        try:
+            uuid = os.environ["TEST_UUID"]
+            url = url.replace("{UUID}", uuid)
+            response = requests.get(url)
+            if response.status_code == 200 and response.text.strip().lower() == "true":
+                break
+        except requests.RequestException as e:
+            print(f"Error checking HTTP trigger: {e}")
         time.sleep(check_interval)

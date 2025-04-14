@@ -22,6 +22,16 @@ steady-state-hypothesis:
 
 method:
   - type: action
+    name: wait-for-trigger
+    provider:
+        type: python
+        module: docker_helpers
+        func: wait_for_trigger
+        arguments:
+          url: http://localhost:8888/trigger/{UUID}
+          check_interval: 0.1
+
+  - type: action
     name: kill-container
     provider:
       type: python
@@ -33,7 +43,7 @@ method:
           - infrastructure-docker-gateway-dapr-1
           - infrastructure-docker-gateway-ecs-1
     pauses:
-      before: 10
+      before: 4
       after: 8
 
   - type: action
