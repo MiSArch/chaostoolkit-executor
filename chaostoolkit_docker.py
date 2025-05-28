@@ -4,6 +4,13 @@ import os
 import requests
 from typing import List
 
+__all__ = [
+    "are_containers_running",
+    "kill_containers",
+    "start_containers",
+    "wait_for_trigger",
+]
+
 def are_containers_running(names: List[str]) -> bool:
     client = docker.from_env()
     try:
