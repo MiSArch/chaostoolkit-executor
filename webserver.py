@@ -1,8 +1,6 @@
 import os
-import time
-import requests
 from subprocess import run
-from flask import Flask, request
+from flask import Flask
 
 app = Flask(__name__)
 
