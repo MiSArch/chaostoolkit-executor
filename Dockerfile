@@ -6,7 +6,7 @@ ARG CTK_VERSION
 RUN groupadd -g 1001 svc && useradd -r -u 1001 -g svc svc
 RUN pip install pdm docker
 
-COPY pyproject.toml pdm.lock webserver.py experiment.yaml chaostoolkit_docker.py /home/svc/
+COPY pyproject.toml pdm.lock webserver.py chaostoolkit_docker.py /home/svc/
 
 RUN export PATH="$PATH:/root/.local/bin" && \
     pdm self update && \
@@ -25,7 +25,6 @@ RUN groupadd -g 1001 svc && \
 
 COPY --from=build-venv --chown=svc:svc /home/svc/.venv/ /home/svc/.venv
 COPY --from=build-venv --chown=svc:svc /home/svc/webserver.py /home/svc/webserver.py
-COPY --from=build-venv --chown=svc:svc /home/svc/experiment.yaml /home/svc/experiment.yaml
 COPY --from=build-venv --chown=svc:svc /home/svc/extension.py /home/svc/extension.py
 COPY --from=build-venv --chown=svc:svc /home/svc/chaostoolkit_docker.py /home/svc/chaostoolkit_docker.py
 
@@ -35,6 +34,6 @@ ENV PYTHONPATH="/home/svc/:${PYTHONPATH}"
 WORKDIR /home/svc
 USER root
 
-EXPOSE 4999
+EXPOSE 8890
 
 CMD ["python3", "webserver.py"]

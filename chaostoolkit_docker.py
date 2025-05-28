@@ -1,6 +1,5 @@
 import time
 import docker
-import os
 import requests
 from typing import List
 
@@ -43,8 +42,6 @@ def start_containers(names: List[str]):
 def wait_for_trigger(url, check_interval=0.1):
     while True:
         try:
-            uuid = os.environ["TEST_UUID"]
-            url = url.replace("{UUID}", uuid)
             response = requests.get(url)
             if response.status_code == 200 and response.text.strip().lower() == "true":
                 break
