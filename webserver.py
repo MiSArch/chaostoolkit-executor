@@ -1,8 +1,7 @@
 import os
 import time
-from subprocess import run
+import subprocess
 from threading import Thread, Event
-
 import requests
 from flask import Flask, request
 
@@ -13,10 +12,15 @@ stop_events = {}
 
 def run_experiment(test_uuid, url):
   stop_event = stop_events[test_uuid]
-  print("waiting for trigger")
   wait_for_trigger(test_uuid, url, stop_event)
   if not stop_event.is_set():
-    run(["chaos", "run", "experiment.yaml"])
+    process = subprocess.Popen(["chaos", "run", "experiment.yaml"])
+    while process.poll() is None:
+      if stop_event.is_set():
+        process.kill()
+        process.terminate()
+        return
+      time.sleep(0.1)
 
 def wait_for_trigger(test_uuid, url, stop_event, check_interval=0.1):
   while not stop_event.is_set():
