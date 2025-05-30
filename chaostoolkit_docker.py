@@ -1,14 +1,5 @@
-import time
 import docker
-import requests
 from typing import List
-
-__all__ = [
-    "are_containers_running",
-    "kill_containers",
-    "start_containers",
-    "wait_for_trigger",
-]
 
 def are_containers_running(names: List[str]) -> bool:
     client = docker.from_env()
@@ -38,13 +29,3 @@ def start_containers(names: List[str]):
             container.start()
         except docker.errors.NotFound:
             print(f"Container {name} not found.")
-
-def wait_for_trigger(url, check_interval=0.1):
-    while True:
-        try:
-            response = requests.get(url)
-            if response.status_code == 200 and response.text.strip().lower() == "true":
-                break
-        except requests.RequestException as e:
-            print(f"Error checking HTTP trigger: {e}")
-        time.sleep(check_interval)
