@@ -1,21 +1,25 @@
 import os
 import time
 from subprocess import run
-from threading import Thread
+from threading import Thread, Event
 
 import requests
 from flask import Flask, request
 
 app = Flask(__name__)
 
-def run_experiment(url):
+experiment_threads = {}
+stop_events = {}
+
+def run_experiment(test_uuid, url):
+  stop_event = stop_events[test_uuid]
   print("waiting for trigger")
-  wait_for_trigger(url)
-  run(["chaos", "run", "experiment.yaml"])
+  wait_for_trigger(test_uuid, url, stop_event)
+  if not stop_event.is_set():
+    run(["chaos", "run", "experiment.yaml"])
 
-
-def wait_for_trigger(test_uuid, check_interval=0.1):
-  while True:
+def wait_for_trigger(test_uuid, url, stop_event, check_interval=0.1):
+  while not stop_event.is_set():
     host = os.getenv("EXPERIMENT_EXECUTOR_URL")
     try:
       response = requests.get(f"{host}/trigger/{test_uuid}")
@@ -30,9 +34,25 @@ def start_experiment():
   test_uuid = request.args.get("testUUID")
   with open("experiment.yaml", "w") as file:
     file.write(request.data.decode("utf-8"))
-    Thread(target=run_experiment, args=(test_uuid,)).start()
 
+  stop_event = Event()
+  stop_events[test_uuid] = stop_event
+  thread = Thread(target=run_experiment, args=(test_uuid, request.url))
+  experiment_threads[test_uuid] = thread
+  thread.start()
   return {"status": "Experiment started"}, 200
+
+@app.route('/stop-experiment', methods=['POST'])
+def stop_experiment():
+  test_uuid = request.args.get("testUUID")
+  if test_uuid in stop_events:
+    stop_events[test_uuid].set()
+    experiment_threads[test_uuid].join()
+    del stop_events[test_uuid]
+    del experiment_threads[test_uuid]
+    return {"status": "Experiment stopped"}, 200
+  else:
+    return {"error": "Experiment not found"}, 404
 
 if __name__ == "__main__":
   port = int(os.environ.get("LISTENER_PORT", 8890))
