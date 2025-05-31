@@ -1,0 +1,6 @@
+services:
+  chaostoolkit-executor:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
