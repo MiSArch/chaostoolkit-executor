@@ -12,7 +12,10 @@ stop_events = {}
 
 def run_experiment(test_uuid, test_version):
   stop_event = stop_events[f"{test_uuid}:{test_version}"]
-  wait_for_trigger(test_uuid, test_version, stop_event)
+  triggered = wait_for_trigger(test_uuid, test_version, stop_event)
+  if not triggered:
+    print(f"Trigger has not been set for {test_uuid}, aborting experiment.")
+    return
   if not stop_event.is_set():
     process = subprocess.Popen(["chaos", "run", "experiment.yaml"])
     while process.poll() is None:
@@ -22,16 +25,24 @@ def run_experiment(test_uuid, test_version):
         return
       time.sleep(0.1)
 
-def wait_for_trigger(test_uuid, test_version, stop_event, check_interval=0.1):
-  while not stop_event.is_set():
-    host = os.getenv("EXPERIMENT_EXECUTOR_URL")
+def wait_for_trigger(test_uuid, test_version, stop_event, check_interval=0.1, max_retries=6000):
+  host = os.getenv("EXPERIMENT_EXECUTOR_URL")
+  try:
+    requests.post(f"{host}/trigger/{test_uuid}/{test_version}?client=chaostoolkit")
+  except requests.RequestException as e:
+    print(f"Error registering trigger: {e}")
+
+  retries = 0
+  while not stop_event.is_set() and retries < max_retries:
     try:
       response = requests.get(f"{host}/trigger/{test_uuid}/{test_version}")
       if response.status_code == 200 and response.text.strip().lower() == "true":
-        break
+        return True
     except requests.RequestException as e:
       print(f"Error checking HTTP trigger: {e}")
     time.sleep(check_interval)
+    retries += 1
+  return False
 
 @app.route('/start-experiment', methods=['POST'])
 def start_experiment():
