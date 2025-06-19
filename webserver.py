@@ -17,7 +17,7 @@ def run_experiment(test_uuid, test_version):
     print(f"Trigger has not been set for {test_uuid}, aborting experiment.")
     return
   if not stop_event.is_set():
-    process = subprocess.Popen(["chaos", "run", "experiment.yaml"])
+    process = subprocess.Popen(["chaos", "run", "experiment.json"])
     while process.poll() is None:
       if stop_event.is_set():
         process.kill()
@@ -49,7 +49,7 @@ def start_experiment():
   test_uuid = request.args.get("testUUID")
   test_version = request.args.get("testVersion")
   test_id = f"{test_uuid}:{test_version}"
-  with open("experiment.yaml", "w") as file:
+  with open("experiment.json", "w") as file:
     file.write(request.data.decode("utf-8"))
 
   stop_event = Event()
