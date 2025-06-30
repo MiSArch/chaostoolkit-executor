@@ -8,23 +8,16 @@ dependencies = [
     "docker>=7.1.0",
     "requests>=2.32.3",
     "Flask>=2.3.3",
-]
-requires-python = ">=3.11"
-
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
-[tool.pdm]
-distribution = false
-
-extensions = [
-    "chaostoolkit-aws>=0.29.0",
-    "chaostoolkit-kubernetes>=0.34.1",
-    "chaostoolkit-google-cloud-platform>=0.14.1",
+    "chaostoolkit-kubernetes>=0.39.0",
+    "chaostoolkit-aws>=0.35.1",
+    "chaostoolkit-kubernetes>=0.39.0",
+    "chaostoolkit-google-cloud-platform>=0.37.0",
     "chaostoolkit-prometheus>=0.6.0",
     "chaostoolkit-toxiproxy>=0.3.1",
-    "chaostoolkit-opentracing>=0.16.1",
-    "chaostoolkit-addons>=0.9.0",
+    "chaostoolkit-addons>=0.11.0",
     "chaostoolkit-slack>=0.10.0",
 ]
+requires-python = ">=3.13"
+
+[tool.pdm]
+package = { include = "misarch_chaostoolkit" }
