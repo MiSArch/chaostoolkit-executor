@@ -10,9 +10,9 @@ app = Flask(__name__)
 experiment_threads = {}
 stop_events = {}
 
-def run_experiment(test_uuid, test_version):
+def run_experiment(test_uuid, test_version, test_delay):
   stop_event = stop_events[f"{test_uuid}:{test_version}"]
-  triggered = wait_for_trigger(test_uuid, test_version, stop_event)
+  triggered = wait_for_trigger(test_uuid, test_version, stop_event, 0.1, 6000 + test_delay)
   if not triggered:
     print(f"Trigger has not been set for {test_uuid}, aborting experiment.")
     return
@@ -48,13 +48,14 @@ def wait_for_trigger(test_uuid, test_version, stop_event, check_interval=0.1, ma
 def start_experiment():
   test_uuid = request.args.get("testUUID")
   test_version = request.args.get("testVersion")
+  test_delay = int(request.args.get("testDelay", default=0))
   test_id = f"{test_uuid}:{test_version}"
   with open("experiment.json", "w") as file:
     file.write(request.data.decode("utf-8"))
 
   stop_event = Event()
   stop_events[test_id] = stop_event
-  thread = Thread(target=run_experiment, args=(test_uuid, test_version))
+  thread = Thread(target=run_experiment, args=(test_uuid, test_version, test_delay))
   experiment_threads[test_id] = thread
   thread.start()
   return {"status": "Experiment started"}, 200
